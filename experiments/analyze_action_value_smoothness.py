@@ -1,0 +1,42 @@
+"""Analyze action value smoothness."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+from crlo.utils.config_loader import ConfigMap
+from crlo.utils.logging import log_run_config
+
+
+def parse_args(argv: list[str] | None = None) -> ConfigMap:
+    """Parse explicit experiment arguments before importing model backends."""
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--pools-dir",
+        type=Path,
+        required=True,
+        help="Directory containing the shared candidate pools.",
+    )
+    parser.add_argument(
+        "--manifest-path", type=Path, required=True, help="Frozen query manifest to evaluate."
+    )
+    parser.add_argument("--merged-path", type=Path, required=True, help="Merged path.")
+    parser.add_argument("--reliability-path", type=Path, required=True, help="Reliability path.")
+    parser.add_argument("--output-dir", type=Path, required=True, help="Output dir.")
+    return ConfigMap(vars(parser.parse_args(argv)))
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run this experiment with the supplied arguments."""
+    config = parse_args(argv)
+    log_run_config(config, command="analyze_action_value_smoothness", argv=argv)
+    from crlo.eval.analyze_action_value_smoothness import analyze_action_value_smoothness
+
+    return analyze_action_value_smoothness(config)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

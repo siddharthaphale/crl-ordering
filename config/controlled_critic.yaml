@@ -1,0 +1,20 @@
+steps: 50000
+batch_size: 256
+n_train: 20000
+bc_alpha: 3.0
+discount: 0.99
+model:
+  learning_rate: 0.0003
+  hidden_dims:
+  - 64
+  - 64
+  latent_dim: 32
+  layer_norm: true
+  cosine_temperature: 0.1
+  td_warmup_steps: 100000
+  tau: 0.005
+  expectile: 0.9
+  num_negatives: 127
+  value_p_curgoal: 0.2
+  value_p_trajgoal: 0.5
+  value_p_randomgoal: 0.3

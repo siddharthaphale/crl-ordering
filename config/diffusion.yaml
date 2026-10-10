@@ -1,0 +1,10 @@
+steps: 500000
+denoising_steps: 20
+lr: 0.0003
+batch_size: 1024
+discount: 0.99
+hidden_dims:
+- 256
+- 256
+schedule: cosine
+time_embed_dim: 32

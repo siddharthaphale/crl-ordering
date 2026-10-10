@@ -1,0 +1,96 @@
+[project]
+name = "crl-ordering"
+version = "0.1.0"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "numpy>=1.26,<2",
+  "matplotlib>=3.8",
+  "pandas>=1.5",
+  "scipy>=1.11",
+  "tqdm>=4.60",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Validated on DGX Spark GB10, aarch64, driver 580.173.02, Python 3.12.13
+# jax 0.6.x requires flax>=0.10 (0.8.x hits 'EvalTrace' API breakage).
+# distrax is an unlisted OGBench vendor dep (imported by utils/networks.py).
+# JaxGCRL removed (its dep on jax==0.4.25 conflicts with our jax 0.6.2 pin).
+experiments = [
+  "jax==0.6.2",
+  "jaxlib==0.6.2",
+  "flax==0.10.7",
+  "optax>=0.2,<0.3",
+  "chex>=0.1.86",
+  "distrax==0.1.5",
+  "ml-collections>=1.0",
+  "tensorflow-probability>=0.25",
+  "mujoco>=3.2",
+  "gymnasium>=1.0",
+  "ogbench==1.2.1",         # exact pin; agent impls/ at commit 1d41409 (vendored)
+]
+# GPU wheels for JAX. The base `jaxlib==0.6.2` pin above is CPU-only; this extra
+# adds the bundled CUDA12 plugin (ships its own CUDA libs — no system CUDA
+# needed) without changing the jax/jaxlib version. Install on a GPU box with:
+#   uv pip install -e ".[experiments,cuda]"
+# make setup installs both the experiments and cuda extras.
+cuda = [
+  "jax-cuda12-plugin[with-cuda]==0.6.2",   # pulls jax-cuda12-pjrt + nvidia-*-cu12 deps
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff==0.16.10",
+  "pre-commit>=4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/crlo/config" = ["config/*.yaml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["vendor/", "*.ipynb", "notebooks/"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "D"]
+ignore = [
+  "E402",  # imports after sys.path / matplotlib.use() injection
+  "B008",  # default arg func call (argparse Path() default)
+  "N803",  # math names: phi, psi, A0, A1
+  "N806",  # ditto inside function bodies
+  "D100",  # missing module docstring (many __init__.py)
+  "D104",  # missing package docstring
+  "D107",  # missing __init__ docstring
+  "D203",  # blank line before class docstring (conflicts w/ D211)
+  "D213",  # multi-line summary on 2nd line (conflicts w/ D212)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Frozen vendor overrides — must match upstream OGBench style; no doc rules.
+"src/crlo/agents/_ogbench_overrides/*" = ["D"]
+# Diffusion-QL JAX port mirrors Ho et al. notation (capital tensor names).
+"src/crlo/agents/_diffusion_ql/*" = ["D", "N"]
+# Tests don't need docstrings; setup blocks may exceed 100 chars.
+"tests/**/*" = ["D", "E501"]
+# Command wrappers may rely on their module docstrings.
+"experiments/**/*" = ["D100", "D101", "D102", "D103"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests/cpu"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
